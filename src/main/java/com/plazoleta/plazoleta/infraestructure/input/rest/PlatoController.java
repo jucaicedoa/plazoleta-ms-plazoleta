@@ -1,7 +1,9 @@
 package com.plazoleta.plazoleta.infraestructure.input.rest;
 
 import com.plazoleta.plazoleta.application.dto.CrearPlatoRequestDto;
+import com.plazoleta.plazoleta.application.dto.ActualizarPlatoRequestDto;
 import com.plazoleta.plazoleta.application.handler.CrearPlatoHandler;
+import com.plazoleta.plazoleta.application.handler.ActualizarPlatoHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PlatoController {
 
     private final CrearPlatoHandler crearPlatoHandler;
+    private final ActualizarPlatoHandler actualizarPlatoHandler;
 
     @PostMapping
     @Operation(summary = "Crear un nuevo plato",
@@ -47,5 +52,32 @@ public class PlatoController {
 
         crearPlatoHandler.handle(dto, propietarioId);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PutMapping("/{id}")
+    @Operation(
+            summary = "Modificar un plato",
+            description = "Permite a un propietario modificar únicamente el precio y la descripción de un plato"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Plato modificado exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o plato no existe",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "403", description = "El usuario no es propietario del restaurante",
+                    content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public ResponseEntity<Void> updateDish(
+            @Parameter(description = "ID del plato", required = true)
+            @PathVariable("id") Long platoId,
+            @Parameter(description = "ID del propietario", required = true)
+            @RequestHeader("propietario-id") Long propietarioId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Datos permitidos a modificar (precio y descripcion)",
+                    required = true
+            )
+            @RequestBody ActualizarPlatoRequestDto dto) {
+
+        actualizarPlatoHandler.handle(platoId, dto, propietarioId);
+        return ResponseEntity.ok().build();
     }
 }

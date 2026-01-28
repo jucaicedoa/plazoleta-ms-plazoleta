@@ -30,7 +30,7 @@ public class CrearPlatoUseCase implements PlatoServicePort {
         if (user == null) {
             throw new DominioException("El usuario no existe");
         }
-        if (!"PROPIETARIO".equalsIgnoreCase(user.getRole())) {
+        if (!isOwnerRole(user.getRole())) {
             throw new DominioException("El usuario no tiene el rol de propietario");
         }
 
@@ -70,5 +70,8 @@ public class CrearPlatoUseCase implements PlatoServicePort {
         if (plato.getRestauranteId() == null) {
             throw new DominioException("El ID del restaurante es obligatorio");
         }
+    }
+    private boolean isOwnerRole(String role) {
+        return "PROPIETARIO".equalsIgnoreCase(role) || "2".equals(role);
     }
 }

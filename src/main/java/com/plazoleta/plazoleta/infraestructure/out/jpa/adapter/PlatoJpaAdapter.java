@@ -7,6 +7,7 @@ import com.plazoleta.plazoleta.infraestructure.out.jpa.mapper.PlatoEntityMapper;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.repository.PlatoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -14,6 +15,12 @@ public class PlatoJpaAdapter implements PlatoPersistencePort {
 
     private final PlatoRepository platoRepository;
     private final PlatoEntityMapper platoEntityMapper;
+
+    @Override
+    public Plato getById(Long dishId) {
+        Optional<PlatoEntity> entity = platoRepository.findById(dishId);
+        return entity.map(platoEntityMapper::toDomain).orElse(null);
+    }
 
     @Override
     public void save(Plato plato) {
