@@ -2,7 +2,9 @@ package com.plazoleta.plazoleta.infrastructure.input.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.plazoleta.plazoleta.application.dto.CrearPlatoRequestDto;
+import com.plazoleta.plazoleta.application.dto.ActualizarPlatoRequestDto;
 import com.plazoleta.plazoleta.application.handler.CrearPlatoHandler;
+import com.plazoleta.plazoleta.application.handler.ActualizarPlatoHandler;
 import com.plazoleta.plazoleta.domain.exception.DominioException;
 import com.plazoleta.plazoleta.infraestructure.input.rest.PlatoController;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +21,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PlatoController.class)
@@ -29,12 +32,14 @@ class PlatoControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
     @MockitoBean
     private CrearPlatoHandler crearPlatoHandler;
-
+    @MockitoBean
+    private ActualizarPlatoHandler actualizarPlatoHandler;
     private CrearPlatoRequestDto validDto;
     private String validJson;
+    private ActualizarPlatoRequestDto actualizarDto;
+    private String updateJson;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -47,6 +52,11 @@ class PlatoControllerTest {
         validDto.setRestauranteId(10L);
 
         validJson = objectMapper.writeValueAsString(validDto);
+
+        actualizarDto = new ActualizarPlatoRequestDto();
+        actualizarDto.setPrecio(18000);
+        actualizarDto.setDescripcion("Hamburguesa artesanal con queso y tocineta");
+        updateJson = objectMapper.writeValueAsString(actualizarDto);
     }
 
     @Test
@@ -251,5 +261,57 @@ class PlatoControllerTest {
                         .contentType(MediaType.TEXT_PLAIN)
                         .content(validJson))
                 .andExpect(status().isUnsupportedMediaType());
+    }
+
+    @Test
+    @DisplayName("PUT /platos/{id} - Debería modificar plato exitosamente y retornar 200")
+    void shouldUpdateDishSuccessfully() throws Exception {
+        Long propietarioId = 1L;
+        Long platoId = 10L;
+
+        doNothing().when(actualizarPlatoHandler).handle(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
+
+        mockMvc.perform(put("/platos/{id}", platoId)
+                        .header("propietario-id", propietarioId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateJson))
+                .andExpect(status().isOk());
+
+        verify(actualizarPlatoHandler).handle(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
+    }
+
+    @Test
+    @DisplayName("PUT /platos/{id} - Debería retornar 400 cuando el plato no existe")
+    void shouldReturn400WhenDishDoesNotExistOnUpdate() throws Exception {
+        Long propietarioId = 1L;
+        Long platoId = 999L;
+
+        doThrow(new DominioException("El plato no existe"))
+                .when(actualizarPlatoHandler).handle(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
+
+        mockMvc.perform(put("/platos/{id}", platoId)
+                        .header("propietario-id", propietarioId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /platos/{id} - Debería retornar 400 cuando el precio es inválido")
+    void shouldReturn400WhenPriceInvalidOnUpdate() throws Exception {
+        Long propietarioId = 1L;
+        Long platoId = 10L;
+
+        ActualizarPlatoRequestDto invalid = new ActualizarPlatoRequestDto(0, "desc");
+        String invalidJson = objectMapper.writeValueAsString(invalid);
+
+        doThrow(new DominioException("El precio debe ser mayor a cero"))
+                .when(actualizarPlatoHandler).handle(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
+
+        mockMvc.perform(put("/platos/{id}", platoId)
+                        .header("propietario-id", propietarioId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -13,8 +13,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
@@ -72,6 +74,36 @@ class PlatoJpaAdapterTest {
         // Then
         verify(dishEntityMapper).toEntity(validDish);
         verify(dishRepository).save(dishEntity);
+    }
+
+    @Test
+    @DisplayName("Debería obtener un plato por ID cuando existe")
+    void shouldGetDishByIdWhenExists() {
+        // Given
+        when(dishRepository.findById(1L)).thenReturn(Optional.of(dishEntity));
+        when(dishEntityMapper.toDomain(dishEntity)).thenReturn(validDish);
+
+        // When
+        Plato result = dishJpaAdapter.getById(1L);
+
+        // Then
+        assertNotNull(result);
+        verify(dishRepository).findById(1L);
+        verify(dishEntityMapper).toDomain(dishEntity);
+    }
+
+    @Test
+    @DisplayName("Debería retornar null al obtener un plato por ID cuando no existe")
+    void shouldReturnNullWhenDishNotFoundById() {
+        // Given
+        when(dishRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // When
+        Plato result = dishJpaAdapter.getById(999L);
+
+        // Then
+        assertNull(result);
+        verify(dishRepository).findById(999L);
     }
 
     @Test
