@@ -1,12 +1,14 @@
 package com.plazoleta.plazoleta.infraestructure.configuration;
 
 import com.plazoleta.plazoleta.domain.api.PlatoServicePort;
+import com.plazoleta.plazoleta.domain.api.PlatoUpdateServicePort;
 import com.plazoleta.plazoleta.domain.api.RestauranteServicePort;
 import com.plazoleta.plazoleta.domain.spi.PlatoPersistencePort;
 import com.plazoleta.plazoleta.domain.spi.RestaurantePersistencePort;
 import com.plazoleta.plazoleta.domain.spi.RestauranteValidationPort;
 import com.plazoleta.plazoleta.domain.spi.UsuarioValidationPort;
 import com.plazoleta.plazoleta.domain.usecase.CrearPlatoUseCase;
+import com.plazoleta.plazoleta.domain.usecase.ActualizarPlatoUseCase;
 import com.plazoleta.plazoleta.domain.usecase.CrearRestauranteUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -34,4 +36,14 @@ public class BeanConfiguration {
                 restauranteValidationPort
         );
     }
+
+    @Bean
+    public PlatoUpdateServicePort dishUpdateServicePort() {
+        return new ActualizarPlatoUseCase(
+                platoPersistencePort,
+                usuarioValidationPort,
+                restauranteValidationPort
+        );
+    }
+
 }
