@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests Unitarios - CreateRestaurantUseCase")
-class CreateRestaurantUseCaseTest {
+class CrearRestauranteUseCaseTest {
 
     @Mock
     private RestaurantePersistencePort persistencePort;
