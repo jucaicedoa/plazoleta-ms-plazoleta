@@ -6,6 +6,7 @@ import com.plazoleta.plazoleta.application.handler.PlatoHandler;
 import com.plazoleta.plazoleta.application.handler.RestauranteHandler;
 import com.plazoleta.plazoleta.application.mapper.PlatoApplicationMapper;
 import com.plazoleta.plazoleta.application.mapper.RestauranteApplicationMapper;
+import com.plazoleta.plazoleta.application.security.ICurrentUserProvider;
 import com.plazoleta.plazoleta.domain.api.PlatoServicePort;
 import com.plazoleta.plazoleta.domain.api.PlatoUpdateServicePort;
 import com.plazoleta.plazoleta.domain.api.RestauranteServicePort;
@@ -18,6 +19,7 @@ import com.plazoleta.plazoleta.domain.usecase.CrearPlatoUseCase;
 import com.plazoleta.plazoleta.domain.usecase.CrearRestauranteUseCase;
 import com.plazoleta.plazoleta.infraestructure.out.client.adapter.UsuarioMicroserviceAdapter;
 import com.plazoleta.plazoleta.infraestructure.out.client.feign.UsuarioFeignClient;
+import com.plazoleta.plazoleta.infraestructure.security.SpringCurrentUserProvider;
 import com.plazoleta.plazoleta.infraestructure.out.client.mapper.UsuarioClientMapper;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.adapter.PlatoJpaAdapter;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.adapter.RestauranteJpaAdapter;
@@ -76,10 +78,16 @@ public class BeanConfiguration {
     }
 
     @Bean
+    public ICurrentUserProvider currentUserProvider() {
+        return new SpringCurrentUserProvider();
+    }
+
+    @Bean
     public IPlatoHandler platoHandler(PlatoServicePort platoServicePort,
                                      PlatoUpdateServicePort platoUpdateServicePort,
-                                     PlatoApplicationMapper platoApplicationMapper) {
-        return new PlatoHandler(platoServicePort, platoUpdateServicePort, platoApplicationMapper);
+                                     PlatoApplicationMapper platoApplicationMapper,
+                                     ICurrentUserProvider currentUserProvider) {
+        return new PlatoHandler(platoServicePort, platoUpdateServicePort, platoApplicationMapper, currentUserProvider);
     }
 
     @Bean
