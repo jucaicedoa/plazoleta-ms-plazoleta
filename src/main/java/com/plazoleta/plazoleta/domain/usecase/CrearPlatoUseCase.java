@@ -2,6 +2,9 @@ package com.plazoleta.plazoleta.domain.usecase;
 
 import com.plazoleta.plazoleta.domain.api.PlatoServicePort;
 import com.plazoleta.plazoleta.domain.exception.DominioException;
+import com.plazoleta.plazoleta.domain.exception.RestauranteNoEncontradoException;
+import com.plazoleta.plazoleta.domain.exception.RestauranteNoPerteneceException;
+import com.plazoleta.plazoleta.domain.exception.RolNoAutorizadoException;
 import com.plazoleta.plazoleta.domain.model.Plato;
 import com.plazoleta.plazoleta.domain.spi.PlatoPersistencePort;
 import com.plazoleta.plazoleta.domain.spi.RestauranteValidationPort;
@@ -27,20 +30,17 @@ public class CrearPlatoUseCase implements PlatoServicePort {
         validarCamposRequeridos(plato);
 
         var user = usuarioValidationPort.getUserById(propietarioId);
-        if (user == null) {
-            throw new DominioException("El usuario no existe");
-        }
         if (!isOwnerRole(user.getRole())) {
-            throw new DominioException("El usuario no tiene el rol de propietario");
+            throw new RolNoAutorizadoException("El usuario no tiene el rol de propietario");
         }
 
         if (!restauranteValidationPort.restauranteExiste(plato.getRestauranteId())) {
-            throw new DominioException("El restaurante especificado no existe");
+            throw new RestauranteNoEncontradoException("El restaurante especificado no existe");
         }
 
         if (!restauranteValidationPort.restaurantePerteneceAPropietario(
                 plato.getRestauranteId(), propietarioId)) {
-            throw new DominioException("El restaurante no pertenece al propietario");
+            throw new RestauranteNoPerteneceException("El restaurante no pertenece al propietario");
         }
 
         if (plato.getPrecio() == null || plato.getPrecio() <= 0) {

@@ -1,6 +1,7 @@
 package com.plazoleta.plazoleta.domain.usecase;
 
 import com.plazoleta.plazoleta.domain.exception.DominioException;
+import com.plazoleta.plazoleta.domain.exception.UsuarioNoEncontradoException;
 import com.plazoleta.plazoleta.domain.model.Plato;
 import com.plazoleta.plazoleta.domain.model.UsuarioModelo;
 import com.plazoleta.plazoleta.domain.spi.PlatoPersistencePort;
@@ -89,13 +90,11 @@ class CrearPlatoUseCaseTest {
     @Test
     @DisplayName("Debería lanzar excepción cuando el usuario no existe")
     void shouldThrowExceptionWhenUserDoesNotExist() {
-        // Given
-        when(userValidationPort.getUserById(validPropietarioId)).thenReturn(null);
+        when(userValidationPort.getUserById(validPropietarioId))
+                .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
 
-        // When & Then
-        DominioException exception = assertThrows(DominioException.class, () -> {
-            createDishUseCase.crearPlato(validDish, validPropietarioId);
-        });
+        UsuarioNoEncontradoException exception = assertThrows(UsuarioNoEncontradoException.class, () ->
+                createDishUseCase.crearPlato(validDish, validPropietarioId));
 
         assertEquals("El usuario no existe", exception.getMessage());
         verify(dishPersistencePort, never()).save(any());

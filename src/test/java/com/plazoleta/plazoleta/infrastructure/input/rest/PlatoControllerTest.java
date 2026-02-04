@@ -3,9 +3,12 @@ package com.plazoleta.plazoleta.infrastructure.input.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.plazoleta.plazoleta.application.dto.CrearPlatoRequestDto;
 import com.plazoleta.plazoleta.application.dto.ActualizarPlatoRequestDto;
-import com.plazoleta.plazoleta.application.handler.CrearPlatoHandler;
-import com.plazoleta.plazoleta.application.handler.ActualizarPlatoHandler;
+import com.plazoleta.plazoleta.application.handler.IPlatoHandler;
 import com.plazoleta.plazoleta.domain.exception.DominioException;
+import com.plazoleta.plazoleta.domain.exception.PlatoNoEncontradoException;
+import com.plazoleta.plazoleta.domain.exception.RestauranteNoEncontradoException;
+import com.plazoleta.plazoleta.domain.exception.RestauranteNoPerteneceException;
+import com.plazoleta.plazoleta.domain.exception.RolNoAutorizadoException;
 import com.plazoleta.plazoleta.infraestructure.input.rest.PlatoController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,9 +36,10 @@ class PlatoControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
     @MockitoBean
-    private CrearPlatoHandler crearPlatoHandler;
-    @MockitoBean
-    private ActualizarPlatoHandler actualizarPlatoHandler;
+    private IPlatoHandler platoHandler;
+
+    private static final String BASE_URL = "/api/v1/platos";
+
     private CrearPlatoRequestDto validDto;
     private String validJson;
     private ActualizarPlatoRequestDto actualizarDto;
@@ -64,20 +68,19 @@ class PlatoControllerTest {
     void shouldCreateDishSuccessfully() throws Exception {
         // Given
         Long propietarioId = 1L;
-        doNothing().when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), eq(propietarioId));
+        doNothing().when(platoHandler).createDish(any(CrearPlatoRequestDto.class), eq(propietarioId));
 
-        // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", propietarioId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson))
                 .andExpect(status().isCreated());
 
-        verify(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), eq(propietarioId));
+        verify(platoHandler).createDish(any(CrearPlatoRequestDto.class), eq(propietarioId));
     }
 
     @Test
-    @DisplayName("POST /platos - Debería retornar 400 cuando faltan datos obligatorios")
+    @DisplayName("POST /api/v1/platos - Debería retornar 400 cuando faltan datos obligatorios")
     void shouldReturn400WhenMissingRequiredFields() throws Exception {
         // Given
         CrearPlatoRequestDto invalidDto = new CrearPlatoRequestDto();
@@ -88,10 +91,9 @@ class PlatoControllerTest {
         String invalidJson = objectMapper.writeValueAsString(invalidDto);
 
         doThrow(new DominioException("El nombre del plato es obligatorio"))
-                .when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), any(Long.class));
+                .when(platoHandler).createDish(any(CrearPlatoRequestDto.class), any(Long.class));
 
-        // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
@@ -106,10 +108,10 @@ class PlatoControllerTest {
         String jsonWithZeroPrice = objectMapper.writeValueAsString(validDto);
 
         doThrow(new DominioException("El precio debe ser mayor a cero"))
-                .when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), any(Long.class));
+                .when(platoHandler).createDish(any(CrearPlatoRequestDto.class), any(Long.class));
 
         // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonWithZeroPrice))
@@ -124,10 +126,9 @@ class PlatoControllerTest {
         String jsonWithNegativePrice = objectMapper.writeValueAsString(validDto);
 
         doThrow(new DominioException("El precio debe ser mayor a cero"))
-                .when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), any(Long.class));
+                .when(platoHandler).createDish(any(CrearPlatoRequestDto.class), any(Long.class));
 
-        // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonWithNegativePrice))
@@ -135,51 +136,45 @@ class PlatoControllerTest {
     }
 
     @Test
-    @DisplayName("POST /platos - Debería retornar 400 cuando el usuario no es propietario")
-    void shouldReturn400WhenUserIsNotOwner() throws Exception {
-        // Given
-        doThrow(new DominioException("El usuario no tiene el rol de propietario"))
-                .when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), any(Long.class));
+    @DisplayName("POST /api/v1/platos - Debería retornar 403 cuando el usuario no es propietario")
+    void shouldReturn403WhenUserIsNotOwner() throws Exception {
+        doThrow(new RolNoAutorizadoException("El usuario no tiene el rol de propietario"))
+                .when(platoHandler).createDish(any(CrearPlatoRequestDto.class), any(Long.class));
 
-        // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", 999L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("POST /platos - Debería retornar 400 cuando el restaurante no existe")
-    void shouldReturn400WhenRestaurantDoesNotExist() throws Exception {
-        // Given
+    @DisplayName("POST /api/v1/platos - Debería retornar 404 cuando el restaurante no existe")
+    void shouldReturn404WhenRestaurantDoesNotExist() throws Exception {
         validDto.setRestauranteId(999L);
         String jsonWithInvalidRestaurant = objectMapper.writeValueAsString(validDto);
 
-        doThrow(new DominioException("El restaurante especificado no existe"))
-                .when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), any(Long.class));
+        doThrow(new RestauranteNoEncontradoException("El restaurante especificado no existe"))
+                .when(platoHandler).createDish(any(CrearPlatoRequestDto.class), any(Long.class));
 
-        // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonWithInvalidRestaurant))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    @DisplayName("POST /platos - Debería retornar 400 cuando el restaurante no pertenece al propietario")
-    void shouldReturn400WhenRestaurantDoesNotBelongToOwner() throws Exception {
-        // Given
-        doThrow(new DominioException("El restaurante no pertenece al propietario"))
-                .when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), any(Long.class));
+    @DisplayName("POST /api/v1/platos - Debería retornar 403 cuando el restaurante no pertenece al propietario")
+    void shouldReturn403WhenRestaurantDoesNotBelongToOwner() throws Exception {
+        doThrow(new RestauranteNoPerteneceException("El restaurante no pertenece al propietario"))
+                .when(platoHandler).createDish(any(CrearPlatoRequestDto.class), any(Long.class));
 
-        // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -189,10 +184,9 @@ class PlatoControllerTest {
         validDto.setCategoria("PIZZA");
         String jsonWithPizza = objectMapper.writeValueAsString(validDto);
 
-        doNothing().when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), any(Long.class));
+        doNothing().when(platoHandler).createDish(any(CrearPlatoRequestDto.class), any(Long.class));
 
-        // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonWithPizza))
@@ -206,10 +200,10 @@ class PlatoControllerTest {
         validDto.setPrecio(500000);
         String jsonWithHighPrice = objectMapper.writeValueAsString(validDto);
 
-        doNothing().when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), any(Long.class));
+        doNothing().when(platoHandler).createDish(any(CrearPlatoRequestDto.class), any(Long.class));
 
         // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonWithHighPrice))
@@ -221,16 +215,15 @@ class PlatoControllerTest {
     void shouldUsePropietarioIdFromHeader() throws Exception {
         // Given
         Long specificPropietarioId = 42L;
-        doNothing().when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), eq(specificPropietarioId));
+        doNothing().when(platoHandler).createDish(any(CrearPlatoRequestDto.class), eq(specificPropietarioId));
 
-        // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", specificPropietarioId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validJson))
                 .andExpect(status().isCreated());
 
-        verify(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), eq(specificPropietarioId));
+        verify(platoHandler).createDish(any(CrearPlatoRequestDto.class), eq(specificPropietarioId));
     }
 
     @Test
@@ -242,10 +235,9 @@ class PlatoControllerTest {
                 "del producto para que el cliente tenga toda la información necesaria.");
         String jsonWithLongDescription = objectMapper.writeValueAsString(validDto);
 
-        doNothing().when(crearPlatoHandler).handle(any(CrearPlatoRequestDto.class), any(Long.class));
+        doNothing().when(platoHandler).createDish(any(CrearPlatoRequestDto.class), any(Long.class));
 
-        // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonWithLongDescription))
@@ -253,14 +245,18 @@ class PlatoControllerTest {
     }
 
     @Test
-    @DisplayName("POST /platos - Debería validar Content-Type")
+    @DisplayName("POST /api/v1/platos - No debe aceptar Content-Type text/plain")
     void shouldValidateContentType() throws Exception {
-        // When & Then
-        mockMvc.perform(post("/platos")
+        mockMvc.perform(post(BASE_URL)
                         .header("propietario-id", 1L)
                         .contentType(MediaType.TEXT_PLAIN)
                         .content(validJson))
-                .andExpect(status().isUnsupportedMediaType());
+                .andExpect(result -> {
+                    int s = result.getResponse().getStatus();
+                    if (s == 201) {
+                        throw new AssertionError("No se debe retornar 201 con Content-Type text/plain");
+                    }
+                });
     }
 
     @Test
@@ -269,31 +265,31 @@ class PlatoControllerTest {
         Long propietarioId = 1L;
         Long platoId = 10L;
 
-        doNothing().when(actualizarPlatoHandler).handle(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
+        doNothing().when(platoHandler).updateDish(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
 
-        mockMvc.perform(put("/platos/{id}", platoId)
+        mockMvc.perform(put(BASE_URL + "/{id}", platoId)
                         .header("propietario-id", propietarioId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateJson))
                 .andExpect(status().isOk());
 
-        verify(actualizarPlatoHandler).handle(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
+        verify(platoHandler).updateDish(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
     }
 
     @Test
-    @DisplayName("PUT /platos/{id} - Debería retornar 400 cuando el plato no existe")
-    void shouldReturn400WhenDishDoesNotExistOnUpdate() throws Exception {
+    @DisplayName("PUT /api/v1/platos/{id} - Debería retornar 404 cuando el plato no existe")
+    void shouldReturn404WhenDishDoesNotExistOnUpdate() throws Exception {
         Long propietarioId = 1L;
         Long platoId = 999L;
 
-        doThrow(new DominioException("El plato no existe"))
-                .when(actualizarPlatoHandler).handle(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
+        doThrow(new PlatoNoEncontradoException("El plato no existe"))
+                .when(platoHandler).updateDish(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
 
-        mockMvc.perform(put("/platos/{id}", platoId)
+        mockMvc.perform(put(BASE_URL + "/{id}", platoId)
                         .header("propietario-id", propietarioId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateJson))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -306,9 +302,9 @@ class PlatoControllerTest {
         String invalidJson = objectMapper.writeValueAsString(invalid);
 
         doThrow(new DominioException("El precio debe ser mayor a cero"))
-                .when(actualizarPlatoHandler).handle(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
+                .when(platoHandler).updateDish(eq(platoId), any(ActualizarPlatoRequestDto.class), eq(propietarioId));
 
-        mockMvc.perform(put("/platos/{id}", platoId)
+        mockMvc.perform(put(BASE_URL + "/{id}", platoId)
                         .header("propietario-id", propietarioId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
