@@ -6,9 +6,7 @@ import com.plazoleta.plazoleta.infraestructure.out.jpa.entity.RestauranteEntity;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.mapper.RestauranteEntityMapper;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.repository.RestauranteRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
-@Component
 @RequiredArgsConstructor
 public class RestauranteJpaAdapter implements RestaurantePersistencePort {
 

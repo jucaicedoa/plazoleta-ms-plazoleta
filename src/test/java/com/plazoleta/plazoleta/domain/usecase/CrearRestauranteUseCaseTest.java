@@ -1,6 +1,7 @@
 package com.plazoleta.plazoleta.domain.usecase;
 
 import com.plazoleta.plazoleta.domain.exception.DominioException;
+import com.plazoleta.plazoleta.domain.exception.UsuarioNoEncontradoException;
 import com.plazoleta.plazoleta.domain.model.Restaurante;
 import com.plazoleta.plazoleta.domain.model.UsuarioModelo;
 import com.plazoleta.plazoleta.domain.spi.RestaurantePersistencePort;
@@ -215,12 +216,11 @@ class CrearRestauranteUseCaseTest {
     @Test
     @DisplayName("Debe lanzar excepción cuando usuario propietario no existe")
     void shouldThrowExceptionWhenOwnerUserDoesNotExist() {
-        // Arrange
-        when(userValidationPort.getUserById(1L)).thenReturn(null);
+        when(userValidationPort.getUserById(1L))
+                .thenThrow(new UsuarioNoEncontradoException("El usuario propietario no existe"));
 
-        // Act & Assert
-        DominioException exception = assertThrows(
-                DominioException.class,
+        UsuarioNoEncontradoException exception = assertThrows(
+                UsuarioNoEncontradoException.class,
                 () -> useCase.crearRestaurante(validRestaurant)
         );
 

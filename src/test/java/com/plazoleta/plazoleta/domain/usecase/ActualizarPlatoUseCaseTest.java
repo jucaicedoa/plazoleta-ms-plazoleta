@@ -1,6 +1,8 @@
 package com.plazoleta.plazoleta.domain.usecase;
 
 import com.plazoleta.plazoleta.domain.exception.DominioException;
+import com.plazoleta.plazoleta.domain.exception.RolNoAutorizadoException;
+import com.plazoleta.plazoleta.domain.exception.UsuarioNoEncontradoException;
 import com.plazoleta.plazoleta.domain.model.Plato;
 import com.plazoleta.plazoleta.domain.model.UsuarioModelo;
 import com.plazoleta.plazoleta.domain.spi.PlatoPersistencePort;
@@ -93,9 +95,10 @@ class ActualizarPlatoUseCaseTest {
     @Test
     @DisplayName("Debería lanzar excepción si el usuario no existe")
     void shouldThrowIfUserDoesNotExist() {
-        when(userValidationPort.getUserById(propietarioId)).thenReturn(null);
+        when(userValidationPort.getUserById(propietarioId))
+                .thenThrow(new UsuarioNoEncontradoException("El usuario no existe"));
 
-        DominioException ex = assertThrows(DominioException.class,
+        UsuarioNoEncontradoException ex = assertThrows(UsuarioNoEncontradoException.class,
                 () -> updateDishUseCase.updateDish(platoId, 18000, "desc", propietarioId));
 
         assertEquals("El usuario no existe", ex.getMessage());
@@ -107,7 +110,7 @@ class ActualizarPlatoUseCaseTest {
     void shouldThrowIfUserIsNotOwner() {
         when(userValidationPort.getUserById(propietarioId)).thenReturn(new UsuarioModelo(propietarioId, "CLIENTE"));
 
-        DominioException ex = assertThrows(DominioException.class,
+        RolNoAutorizadoException ex = assertThrows(RolNoAutorizadoException.class,
                 () -> updateDishUseCase.updateDish(platoId, 18000, "desc", propietarioId));
 
         assertEquals("El usuario no tiene el rol de propietario", ex.getMessage());

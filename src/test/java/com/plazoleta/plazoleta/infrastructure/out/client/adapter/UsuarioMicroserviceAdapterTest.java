@@ -1,5 +1,7 @@
 package com.plazoleta.plazoleta.infrastructure.out.client.adapter;
 
+import com.plazoleta.plazoleta.domain.exception.ServicioUsuarioNoDisponibleException;
+import com.plazoleta.plazoleta.domain.exception.UsuarioNoEncontradoException;
 import com.plazoleta.plazoleta.domain.model.UsuarioModelo;
 import com.plazoleta.plazoleta.infraestructure.out.client.adapter.UsuarioMicroserviceAdapter;
 import com.plazoleta.plazoleta.infraestructure.out.client.dto.UsuarioResponseDto;
@@ -56,7 +58,7 @@ class UsuarioMicroserviceAdapterTest {
     @DisplayName("Debe obtener usuario exitosamente cuando existe")
     void shouldGetUserSuccessfullyWhenExists() {
         // Arrange
-        when(userFeignClient.getUserById(1)).thenReturn(userResponseDto);
+        when(userFeignClient.getUserById(1L)).thenReturn(userResponseDto);
         when(userClientMapper.toUserModel(userResponseDto)).thenReturn(userModel);
 
         // Act
@@ -66,14 +68,13 @@ class UsuarioMicroserviceAdapterTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getRole()).isEqualTo("PROPIETARIO");
-        verify(userFeignClient, times(1)).getUserById(1);
+        verify(userFeignClient, times(1)).getUserById(1L);
         verify(userClientMapper, times(1)).toUserModel(userResponseDto);
     }
 
     @Test
-    @DisplayName("Debe retornar null cuando el usuario no existe (404)")
-    void shouldReturnNullWhenUserNotFound() {
-        // Arrange
+    @DisplayName("Debe lanzar UsuarioNoEncontradoException cuando el usuario no existe (404)")
+    void shouldThrowUsuarioNoEncontradoWhenUserNotFound() {
         Request request = Request.create(
                 Request.HttpMethod.GET,
                 "/usuarios/999",
@@ -87,22 +88,18 @@ class UsuarioMicroserviceAdapterTest {
                 null,
                 null
         );
+        when(userFeignClient.getUserById(999L)).thenThrow(notFoundException);
 
-        when(userFeignClient.getUserById(999)).thenThrow(notFoundException);
-
-        // Act
-        UsuarioModelo result = adapter.getUserById(999L);
-
-        // Assert
-        assertThat(result).isNull();
-        verify(userFeignClient, times(1)).getUserById(999);
+        assertThatThrownBy(() -> adapter.getUserById(999L))
+                .isInstanceOf(UsuarioNoEncontradoException.class)
+                .hasMessage("El usuario no existe");
+        verify(userFeignClient, times(1)).getUserById(999L);
         verify(userClientMapper, never()).toUserModel(any());
     }
 
     @Test
-    @DisplayName("Debe lanzar RuntimeException cuando Feign lanza otra excepción")
-    void shouldThrowRuntimeExceptionWhenFeignThrowsOtherException() {
-        // Arrange
+    @DisplayName("Debe lanzar ServicioUsuarioNoDisponibleException cuando Feign falla")
+    void shouldThrowServicioUsuarioNoDisponibleWhenFeignThrowsOtherException() {
         Request request = Request.create(
                 Request.HttpMethod.GET,
                 "/usuarios/1",
@@ -116,30 +113,28 @@ class UsuarioMicroserviceAdapterTest {
                 null,
                 null
         );
+        when(userFeignClient.getUserById(1L)).thenThrow(feignException);
 
-        when(userFeignClient.getUserById(1)).thenThrow(feignException);
-
-        // Act & Assert
         assertThatThrownBy(() -> adapter.getUserById(1L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ServicioUsuarioNoDisponibleException.class)
                 .hasMessageContaining("Error al comunicarse con el microservicio de usuarios");
 
-        verify(userFeignClient, times(1)).getUserById(1);
+        verify(userFeignClient, times(1)).getUserById(1L);
         verify(userClientMapper, never()).toUserModel(any());
     }
 
     @Test
-    @DisplayName("Debe convertir Long a Integer correctamente")
-    void shouldConvertLongToIntegerCorrectly() {
+    @DisplayName("Debe pasar el ID Long al Feign client")
+    void shouldPassLongIdToFeignClient() {
         // Arrange
-        when(userFeignClient.getUserById(100)).thenReturn(userResponseDto);
+        when(userFeignClient.getUserById(100L)).thenReturn(userResponseDto);
         when(userClientMapper.toUserModel(any())).thenReturn(userModel);
 
         // Act
         adapter.getUserById(100L);
 
         // Assert
-        verify(userFeignClient, times(1)).getUserById(100);
+        verify(userFeignClient, times(1)).getUserById(100L);
     }
 
     @Test
@@ -161,8 +156,8 @@ class UsuarioMicroserviceAdapterTest {
     @DisplayName("Debe manejar múltiples llamadas independientes")
     void shouldHandleMultipleIndependentCalls() {
         // Arrange
-        when(userFeignClient.getUserById(1)).thenReturn(userResponseDto);
-        when(userFeignClient.getUserById(2)).thenReturn(userResponseDto);
+        when(userFeignClient.getUserById(1L)).thenReturn(userResponseDto);
+        when(userFeignClient.getUserById(2L)).thenReturn(userResponseDto);
         when(userClientMapper.toUserModel(any())).thenReturn(userModel);
 
         // Act
@@ -170,8 +165,8 @@ class UsuarioMicroserviceAdapterTest {
         adapter.getUserById(2L);
 
         // Assert
-        verify(userFeignClient, times(1)).getUserById(1);
-        verify(userFeignClient, times(1)).getUserById(2);
+        verify(userFeignClient, times(1)).getUserById(1L);
+        verify(userFeignClient, times(1)).getUserById(2L);
         verify(userClientMapper, times(2)).toUserModel(any());
     }
 }

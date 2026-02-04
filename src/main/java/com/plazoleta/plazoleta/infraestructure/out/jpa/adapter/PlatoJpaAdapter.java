@@ -6,10 +6,8 @@ import com.plazoleta.plazoleta.infraestructure.out.jpa.entity.PlatoEntity;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.mapper.PlatoEntityMapper;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.repository.PlatoRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import java.util.Optional;
 
-@Component
 @RequiredArgsConstructor
 public class PlatoJpaAdapter implements PlatoPersistencePort {
 

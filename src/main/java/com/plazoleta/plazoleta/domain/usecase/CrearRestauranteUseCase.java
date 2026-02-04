@@ -2,6 +2,7 @@ package com.plazoleta.plazoleta.domain.usecase;
 
 import com.plazoleta.plazoleta.domain.api.RestauranteServicePort;
 import com.plazoleta.plazoleta.domain.exception.DominioException;
+import com.plazoleta.plazoleta.domain.exception.RolNoAutorizadoException;
 import com.plazoleta.plazoleta.domain.model.Restaurante;
 import com.plazoleta.plazoleta.domain.model.UsuarioModelo;
 import com.plazoleta.plazoleta.domain.spi.RestaurantePersistencePort;
@@ -20,7 +21,6 @@ public class CrearRestauranteUseCase implements RestauranteServicePort {
 
     @Override
     public void crearRestaurante(Restaurante restaurant) {
-        // Validación: Nombre no puede ser solo números
         if (restaurant.getNombre() == null || restaurant.getNombre().trim().isEmpty()) {
             throw new DominioException("El nombre del restaurante es obligatorio");
         }
@@ -28,12 +28,10 @@ public class CrearRestauranteUseCase implements RestauranteServicePort {
             throw new DominioException("El nombre del restaurante no puede contener solo números");
         }
 
-        // Validación: NIT debe ser numérico
         if (restaurant.getNit() == null || !restaurant.getNit().matches("\\d+")) {
             throw new DominioException("El NIT debe ser numérico");
         }
 
-        // Validación: Teléfono debe ser numérico (puede iniciar con +) y máximo 13 caracteres
         if (restaurant.getTelefono() == null || !restaurant.getTelefono().matches("^\\+?\\d+$")) {
             throw new DominioException("El teléfono debe ser numérico y puede incluir el símbolo + al inicio");
         }
@@ -41,25 +39,16 @@ public class CrearRestauranteUseCase implements RestauranteServicePort {
             throw new DominioException("El teléfono debe tener máximo 13 caracteres");
         }
 
-        // Validación: Comunicación con microservicio de usuarios
         UsuarioModelo user = userValidationPort.getUserById(restaurant.getPropietarioId());
 
-        // Validación: Usuario debe existir
-        if (user == null) {
-            throw new DominioException("El usuario propietario no existe");
-        }
-
-        // Validación: Usuario debe tener rol PROPIETARIO
         if (!isOwnerRole(user.getRole())) {
-            throw new DominioException("El usuario no tiene rol de propietario");
+            throw new RolNoAutorizadoException("El usuario no tiene rol de propietario");
         }
 
-        //validaciones pasan, guardar el restaurante
         persistencePort.save(restaurant);
     }
 
     private boolean isOwnerRole(String role) {
-        // Acepta "PROPIETARIO" o "2" (ID del rol propietario)
         return "PROPIETARIO".equalsIgnoreCase(role) || "2".equals(role);
     }
 }
