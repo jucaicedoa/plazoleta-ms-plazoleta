@@ -5,7 +5,7 @@ import com.plazoleta.plazoleta.application.dto.CrearPlatoRequestDto;
 
 public interface IPlatoHandler {
 
-    void createDish(CrearPlatoRequestDto dto, Long propietarioId);
+    void createDish(CrearPlatoRequestDto dto);
 
-    void updateDish(Long platoId, ActualizarPlatoRequestDto dto, Long propietarioId);
+    void updateDish(Long platoId, ActualizarPlatoRequestDto dto);
 }

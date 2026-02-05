@@ -18,19 +18,22 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String NOT_FOUND_TITLE = "Recurso no encontrado";
+
+
     @ExceptionHandler(UsuarioNoEncontradoException.class)
     public ResponseEntity<ErrorResponseDto> handleUsuarioNoEncontrado(UsuarioNoEncontradoException ex) {
-        return buildError(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage());
+        return buildError(HttpStatus.NOT_FOUND, NOT_FOUND_TITLE, ex.getMessage());
     }
 
     @ExceptionHandler(PlatoNoEncontradoException.class)
     public ResponseEntity<ErrorResponseDto> handlePlatoNoEncontrado(PlatoNoEncontradoException ex) {
-        return buildError(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage());
+        return buildError(HttpStatus.NOT_FOUND, NOT_FOUND_TITLE, ex.getMessage());
     }
 
     @ExceptionHandler(RestauranteNoEncontradoException.class)
     public ResponseEntity<ErrorResponseDto> handleRestauranteNoEncontrado(RestauranteNoEncontradoException ex) {
-        return buildError(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage());
+        return buildError(HttpStatus.NOT_FOUND, NOT_FOUND_TITLE, ex.getMessage());
     }
 
     @ExceptionHandler(RolNoAutorizadoException.class)

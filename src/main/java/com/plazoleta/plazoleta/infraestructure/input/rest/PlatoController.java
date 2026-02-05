@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,14 +43,12 @@ public class PlatoController {
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
     public ResponseEntity<Void> createDish(
-            @Parameter(description = "ID del propietario", required = true)
-            @RequestHeader("propietario-id") Long propietarioId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Datos del plato a crear",
                     required = true
             )
             @RequestBody CrearPlatoRequestDto dto) {
-        platoHandler.createDish(dto, propietarioId);
+        platoHandler.createDish(dto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -72,14 +69,12 @@ public class PlatoController {
     public ResponseEntity<Void> updateDish(
             @Parameter(description = "ID del plato", required = true)
             @PathVariable("id") Long platoId,
-            @Parameter(description = "ID del propietario", required = true)
-            @RequestHeader("propietario-id") Long propietarioId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Datos permitidos a modificar (precio y descripcion)",
                     required = true
             )
             @RequestBody ActualizarPlatoRequestDto dto) {
-        platoHandler.updateDish(platoId, dto, propietarioId);
+        platoHandler.updateDish(platoId, dto);
         return ResponseEntity.ok().build();
     }
 }
