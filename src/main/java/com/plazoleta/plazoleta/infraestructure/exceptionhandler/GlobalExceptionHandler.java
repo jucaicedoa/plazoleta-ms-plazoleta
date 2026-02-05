@@ -18,8 +18,7 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final String NOT_FOUND_TITLE = "Recurso no encontrado";
-
+    private static final String NOT_FOUND_TITLE = "Not Found";
 
     @ExceptionHandler(UsuarioNoEncontradoException.class)
     public ResponseEntity<ErrorResponseDto> handleUsuarioNoEncontrado(UsuarioNoEncontradoException ex) {
