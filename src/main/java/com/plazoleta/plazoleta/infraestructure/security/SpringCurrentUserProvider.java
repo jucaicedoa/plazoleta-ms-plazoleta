@@ -4,14 +4,10 @@ import com.plazoleta.plazoleta.application.security.ICurrentUserProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Collections;
-
 /**
  * Implementación que obtiene userId y role del SecurityContext (poblado por JwtAuthenticationFilter)
  */
 public class SpringCurrentUserProvider implements ICurrentUserProvider {
-
-    private static final String ROLE_CLAIM = "role";
 
     @Override
     public Long getCurrentUserId() {
@@ -20,12 +16,13 @@ public class SpringCurrentUserProvider implements ICurrentUserProvider {
             return null;
         }
         Object principal = auth.getPrincipal();
-        if (principal instanceof Long) {
-            return (Long) principal;
+        if (principal instanceof Long userId) {
+            return userId;
         }
-        if (principal instanceof String) {
+
+        if (principal instanceof String userIdStr) {
             try {
-                return Long.parseLong((String) principal);
+                return Long.parseLong(userIdStr);
             } catch (NumberFormatException e) {
                 return null;
             }
