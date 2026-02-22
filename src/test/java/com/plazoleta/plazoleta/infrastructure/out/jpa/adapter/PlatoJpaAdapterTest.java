@@ -51,7 +51,7 @@ class PlatoJpaAdapterTest {
         );
 
         dishEntity = new PlatoEntity();
-        dishEntity.setId(1L);
+        dishEntity.setId(1);
         dishEntity.setNombre("Hamburguesa Especial");
         dishEntity.setPrecio(25000);
         dishEntity.setDescripcion("Carne artesanal con queso cheddar");

@@ -47,7 +47,7 @@ class UsuarioMicroserviceAdapterTest {
 
         userResponseDto = new UsuarioResponseDto();
         userResponseDto.setId(1L);
-        userResponseDto.setRol("PROPIETARIO");
+        userResponseDto.setRole("PROPIETARIO");
 
         userModel = new UsuarioModelo();
         userModel.setId(1L);

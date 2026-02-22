@@ -39,7 +39,7 @@ class RestauranteHandlerTest {
         requestDto = new CrearRestauranteRequestDto();
         requestDto.setNombre("La Arepa Feliz");
         requestDto.setDireccion("Calle 123 #45-67");
-        requestDto.setPropietarioId(1L);
+        requestDto.setPropietario_id(1L);
         requestDto.setTelefono("+573001234567");
         requestDto.setUrlLogo("https://ejemplo.com/logo.png");
         requestDto.setNit("900123456");

@@ -46,7 +46,7 @@ class RestauranteControllerTest {
         CrearRestauranteRequestDto dto = new CrearRestauranteRequestDto();
         dto.setNombre("La Arepa Feliz");
         dto.setDireccion("Calle 123 #45-67");
-        dto.setPropietarioId(1L);
+        dto.setPropietario_id(1L);
         dto.setTelefono("+573001234567");
         dto.setUrlLogo("https://ejemplo.com/logo.png");
         dto.setNit("900123456");
@@ -67,7 +67,7 @@ class RestauranteControllerTest {
         CrearRestauranteRequestDto dto = new CrearRestauranteRequestDto();
         dto.setNombre("La Arepa Feliz");
         dto.setDireccion("Calle 123 #45-67");
-        dto.setPropietarioId(1L);
+        dto.setPropietario_id(1L);
         dto.setTelefono("+573001234567");
         dto.setUrlLogo("https://ejemplo.com/logo.png");
         dto.setNit("900-123-456");
@@ -89,7 +89,7 @@ class RestauranteControllerTest {
         CrearRestauranteRequestDto dto = new CrearRestauranteRequestDto();
         dto.setNombre("La Arepa Feliz");
         dto.setDireccion("Calle 123 #45-67");
-        dto.setPropietarioId(999L);
+        dto.setPropietario_id(999L);
         dto.setTelefono("+573001234567");
         dto.setUrlLogo("https://ejemplo.com/logo.png");
         dto.setNit("900123456");
@@ -110,7 +110,7 @@ class RestauranteControllerTest {
         CrearRestauranteRequestDto dto = new CrearRestauranteRequestDto();
         dto.setNombre("La Arepa Feliz");
         dto.setDireccion("Calle 123 #45-67");
-        dto.setPropietarioId(1L);
+        dto.setPropietario_id(1L);
         dto.setTelefono("+573001234567");
         dto.setUrlLogo("https://ejemplo.com/logo.png");
         dto.setNit("900123456");
@@ -131,7 +131,7 @@ class RestauranteControllerTest {
         CrearRestauranteRequestDto dto = new CrearRestauranteRequestDto();
         dto.setNombre("La Arepa Feliz");
         dto.setDireccion("Calle 123 #45-67");
-        dto.setPropietarioId(1L);
+        dto.setPropietario_id(1L);
         dto.setTelefono("+573001234567");
         dto.setUrlLogo("https://ejemplo.com/logo.png");
         dto.setNit("900123456");
@@ -152,7 +152,7 @@ class RestauranteControllerTest {
         CrearRestauranteRequestDto dto = new CrearRestauranteRequestDto();
         dto.setNombre("12345");
         dto.setDireccion("Calle 123");
-        dto.setPropietarioId(1L);
+        dto.setPropietario_id(1L);
         dto.setTelefono("+573001234567");
         dto.setUrlLogo("https://test.com");
         dto.setNit("123456789");
