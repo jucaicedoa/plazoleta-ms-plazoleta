@@ -39,6 +39,10 @@ public class CrearRestauranteUseCase implements RestauranteServicePort {
             throw new DominioException("El teléfono debe tener máximo 13 caracteres");
         }
 
+        if (restaurant.getPropietarioId() == null) {
+            throw new DominioException("El propietarioId es obligatorio");
+        }
+
         UsuarioModelo user = userValidationPort.getUserById(restaurant.getPropietarioId());
 
         if (!isOwnerRole(user.getRole())) {
