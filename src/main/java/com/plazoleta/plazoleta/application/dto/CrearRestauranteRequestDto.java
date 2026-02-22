@@ -13,7 +13,7 @@ public class CrearRestauranteRequestDto {
 
     private String nombre;
     private String direccion;
-    private Long propietarioId;
+    private Long propietario_id;
     private String telefono;
     private String urlLogo;
     private String nit;

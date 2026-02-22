@@ -9,5 +9,6 @@ import org.mapstruct.Mapping;
 public interface RestauranteApplicationMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(source = "propietario_id", target = "propietarioId")
     Restaurante toDomain(CrearRestauranteRequestDto dto);
 }
