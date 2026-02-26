@@ -14,6 +14,8 @@ import com.plazoleta.plazoleta.domain.spi.PlatoPersistencePort;
 import com.plazoleta.plazoleta.domain.spi.RestaurantePersistencePort;
 import com.plazoleta.plazoleta.domain.spi.RestauranteValidationPort;
 import com.plazoleta.plazoleta.domain.spi.UsuarioValidationPort;
+import com.plazoleta.plazoleta.domain.spi.PlatoBusinessValidationPort;
+import com.plazoleta.plazoleta.domain.spi.RestauranteBusinessValidationPort;
 import com.plazoleta.plazoleta.domain.usecase.ActualizarPlatoUseCase;
 import com.plazoleta.plazoleta.domain.usecase.CrearPlatoUseCase;
 import com.plazoleta.plazoleta.domain.usecase.CrearRestauranteUseCase;
@@ -24,6 +26,8 @@ import com.plazoleta.plazoleta.infraestructure.out.client.mapper.UsuarioClientMa
 import com.plazoleta.plazoleta.infraestructure.out.jpa.adapter.PlatoJpaAdapter;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.adapter.RestauranteJpaAdapter;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.adapter.RestauranteValidationJpaAdapter;
+import com.plazoleta.plazoleta.infraestructure.out.validation.PlatoBusinessValidationAdapter;
+import com.plazoleta.plazoleta.infraestructure.out.validation.RestauranteBusinessValidationAdapter;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.mapper.PlatoEntityMapper;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.mapper.RestauranteEntityMapper;
 import com.plazoleta.plazoleta.infraestructure.out.jpa.repository.PlatoRepository;
@@ -58,23 +62,36 @@ public class BeanConfiguration {
     }
 
     @Bean
+    public RestauranteBusinessValidationPort restauranteBusinessValidationPort() {
+        return new RestauranteBusinessValidationAdapter();
+    }
+
+    @Bean
+    public PlatoBusinessValidationPort platoBusinessValidationPort() {
+        return new PlatoBusinessValidationAdapter();
+    }
+
+    @Bean
     public RestauranteServicePort restauranteServicePort(RestaurantePersistencePort restaurantePersistencePort,
-                                                         UsuarioValidationPort usuarioValidationPort) {
-        return new CrearRestauranteUseCase(restaurantePersistencePort, usuarioValidationPort);
+                                                         UsuarioValidationPort usuarioValidationPort,
+                                                         RestauranteBusinessValidationPort restauranteBusinessValidationPort) {
+        return new CrearRestauranteUseCase(restaurantePersistencePort, usuarioValidationPort, restauranteBusinessValidationPort);
     }
 
     @Bean
     public PlatoServicePort platoServicePort(PlatoPersistencePort platoPersistencePort,
                                              UsuarioValidationPort usuarioValidationPort,
-                                             RestauranteValidationPort restauranteValidationPort) {
-        return new CrearPlatoUseCase(platoPersistencePort, usuarioValidationPort, restauranteValidationPort);
+                                             RestauranteValidationPort restauranteValidationPort,
+                                             PlatoBusinessValidationPort platoBusinessValidationPort) {
+        return new CrearPlatoUseCase(platoPersistencePort, usuarioValidationPort, restauranteValidationPort, platoBusinessValidationPort);
     }
 
     @Bean
     public PlatoUpdateServicePort platoUpdateServicePort(PlatoPersistencePort platoPersistencePort,
                                                          UsuarioValidationPort usuarioValidationPort,
-                                                         RestauranteValidationPort restauranteValidationPort) {
-        return new ActualizarPlatoUseCase(platoPersistencePort, usuarioValidationPort, restauranteValidationPort);
+                                                         RestauranteValidationPort restauranteValidationPort,
+                                                         PlatoBusinessValidationPort platoBusinessValidationPort) {
+        return new ActualizarPlatoUseCase(platoPersistencePort, usuarioValidationPort, restauranteValidationPort, platoBusinessValidationPort);
     }
 
     @Bean
