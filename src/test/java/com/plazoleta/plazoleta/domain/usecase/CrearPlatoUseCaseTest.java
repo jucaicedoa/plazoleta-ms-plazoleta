@@ -1,9 +1,13 @@
 package com.plazoleta.plazoleta.domain.usecase;
 
 import com.plazoleta.plazoleta.domain.exception.DominioException;
+import com.plazoleta.plazoleta.domain.exception.RestauranteNoEncontradoException;
+import com.plazoleta.plazoleta.domain.exception.RestauranteNoPerteneceException;
+import com.plazoleta.plazoleta.domain.exception.RolNoAutorizadoException;
 import com.plazoleta.plazoleta.domain.exception.UsuarioNoEncontradoException;
 import com.plazoleta.plazoleta.domain.model.Plato;
 import com.plazoleta.plazoleta.domain.model.UsuarioModelo;
+import com.plazoleta.plazoleta.domain.spi.PlatoBusinessValidationPort;
 import com.plazoleta.plazoleta.domain.spi.PlatoPersistencePort;
 import com.plazoleta.plazoleta.domain.spi.RestauranteValidationPort;
 import com.plazoleta.plazoleta.domain.spi.UsuarioValidationPort;
@@ -35,6 +39,8 @@ class CrearPlatoUseCaseTest {
     @Mock
     private RestauranteValidationPort restaurantValidationPort;
 
+    private PlatoBusinessValidationPort platoBusinessValidationPort;
+
     private CrearPlatoUseCase createDishUseCase;
 
     private Plato validDish;
@@ -43,10 +49,12 @@ class CrearPlatoUseCaseTest {
 
     @BeforeEach
     void setUp() {
+        platoBusinessValidationPort = new com.plazoleta.plazoleta.infraestructure.out.validation.PlatoBusinessValidationAdapter();
         createDishUseCase = new CrearPlatoUseCase(
                 dishPersistencePort,
                 userValidationPort,
-                restaurantValidationPort
+                restaurantValidationPort,
+                platoBusinessValidationPort
         );
 
         validPropietarioId = 1L;
@@ -111,7 +119,7 @@ class CrearPlatoUseCaseTest {
         when(userValidationPort.getUserById(validPropietarioId)).thenReturn(clientUser);
 
         // When & Then
-        DominioException exception = assertThrows(DominioException.class, () -> {
+        RolNoAutorizadoException exception = assertThrows(RolNoAutorizadoException.class, () -> {
             createDishUseCase.crearPlato(validDish, validPropietarioId);
         });
 
@@ -127,7 +135,7 @@ class CrearPlatoUseCaseTest {
         when(restaurantValidationPort.restauranteExiste(validDish.getRestauranteId())).thenReturn(false);
 
         // When & Then
-        DominioException exception = assertThrows(DominioException.class, () -> {
+        RestauranteNoEncontradoException exception = assertThrows(RestauranteNoEncontradoException.class, () -> {
             createDishUseCase.crearPlato(validDish, validPropietarioId);
         });
 
@@ -145,7 +153,7 @@ class CrearPlatoUseCaseTest {
                 .thenReturn(false);
 
         // When & Then
-        DominioException exception = assertThrows(DominioException.class, () -> {
+        RestauranteNoPerteneceException exception = assertThrows(RestauranteNoPerteneceException.class, () -> {
             createDishUseCase.crearPlato(validDish, validPropietarioId);
         });
 
@@ -156,12 +164,8 @@ class CrearPlatoUseCaseTest {
     @Test
     @DisplayName("Debería lanzar excepción cuando el precio es cero")
     void shouldThrowExceptionWhenPriceIsZero() {
-        // Given
+        // Given - la validación de negocio falla antes de llamar a usuario/restaurante
         validDish.setPrecio(0);
-        when(userValidationPort.getUserById(validPropietarioId)).thenReturn(ownerUser);
-        when(restaurantValidationPort.restauranteExiste(validDish.getRestauranteId())).thenReturn(true);
-        when(restaurantValidationPort.restaurantePerteneceAPropietario(validDish.getRestauranteId(), validPropietarioId))
-                .thenReturn(true);
 
         // When & Then
         DominioException exception = assertThrows(DominioException.class, () -> {
@@ -175,12 +179,8 @@ class CrearPlatoUseCaseTest {
     @Test
     @DisplayName("Debería lanzar excepción cuando el precio es negativo")
     void shouldThrowExceptionWhenPriceIsNegative() {
-        // Given
+        // Given - la validación de negocio falla antes de llamar a usuario/restaurante
         validDish.setPrecio(-5000);
-        when(userValidationPort.getUserById(validPropietarioId)).thenReturn(ownerUser);
-        when(restaurantValidationPort.restauranteExiste(validDish.getRestauranteId())).thenReturn(true);
-        when(restaurantValidationPort.restaurantePerteneceAPropietario(validDish.getRestauranteId(), validPropietarioId))
-                .thenReturn(true);
 
         // When & Then
         DominioException exception = assertThrows(DominioException.class, () -> {

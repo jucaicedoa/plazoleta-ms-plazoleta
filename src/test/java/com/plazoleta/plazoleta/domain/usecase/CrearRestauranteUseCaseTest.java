@@ -1,9 +1,11 @@
 package com.plazoleta.plazoleta.domain.usecase;
 
 import com.plazoleta.plazoleta.domain.exception.DominioException;
+import com.plazoleta.plazoleta.domain.exception.RolNoAutorizadoException;
 import com.plazoleta.plazoleta.domain.exception.UsuarioNoEncontradoException;
 import com.plazoleta.plazoleta.domain.model.Restaurante;
 import com.plazoleta.plazoleta.domain.model.UsuarioModelo;
+import com.plazoleta.plazoleta.domain.spi.RestauranteBusinessValidationPort;
 import com.plazoleta.plazoleta.domain.spi.RestaurantePersistencePort;
 import com.plazoleta.plazoleta.domain.spi.UsuarioValidationPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +35,8 @@ class CrearRestauranteUseCaseTest {
     @Mock
     private UsuarioValidationPort userValidationPort;
 
+    private RestauranteBusinessValidationPort restauranteBusinessValidationPort;
+
     private CrearRestauranteUseCase useCase;
 
     private Restaurante validRestaurant;
@@ -40,7 +44,8 @@ class CrearRestauranteUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new CrearRestauranteUseCase(persistencePort, userValidationPort);
+        restauranteBusinessValidationPort = new com.plazoleta.plazoleta.infraestructure.out.validation.RestauranteBusinessValidationAdapter();
+        useCase = new CrearRestauranteUseCase(persistencePort, userValidationPort, restauranteBusinessValidationPort);
 
         // Restaurante válido para reutilizar en los tests
         validRestaurant = new Restaurante();
@@ -238,8 +243,8 @@ class CrearRestauranteUseCaseTest {
         when(userValidationPort.getUserById(1L)).thenReturn(clienteUser);
 
         // Act & Assert
-        DominioException exception = assertThrows(
-                DominioException.class,
+        RolNoAutorizadoException exception = assertThrows(
+                RolNoAutorizadoException.class,
                 () -> useCase.crearRestaurante(validRestaurant)
         );
 
@@ -272,8 +277,8 @@ class CrearRestauranteUseCaseTest {
         when(userValidationPort.getUserById(1L)).thenReturn(otroRolUser);
 
         // Act & Assert
-        DominioException exception = assertThrows(
-                DominioException.class,
+        RolNoAutorizadoException exception = assertThrows(
+                RolNoAutorizadoException.class,
                 () -> useCase.crearRestaurante(validRestaurant)
         );
 

@@ -1,10 +1,13 @@
 package com.plazoleta.plazoleta.domain.usecase;
 
 import com.plazoleta.plazoleta.domain.exception.DominioException;
+import com.plazoleta.plazoleta.domain.exception.PlatoNoEncontradoException;
+import com.plazoleta.plazoleta.domain.exception.RestauranteNoPerteneceException;
 import com.plazoleta.plazoleta.domain.exception.RolNoAutorizadoException;
 import com.plazoleta.plazoleta.domain.exception.UsuarioNoEncontradoException;
 import com.plazoleta.plazoleta.domain.model.Plato;
 import com.plazoleta.plazoleta.domain.model.UsuarioModelo;
+import com.plazoleta.plazoleta.domain.spi.PlatoBusinessValidationPort;
 import com.plazoleta.plazoleta.domain.spi.PlatoPersistencePort;
 import com.plazoleta.plazoleta.domain.spi.RestauranteValidationPort;
 import com.plazoleta.plazoleta.domain.spi.UsuarioValidationPort;
@@ -35,6 +38,8 @@ class ActualizarPlatoUseCaseTest {
     @Mock
     private RestauranteValidationPort restaurantValidationPort;
 
+    private PlatoBusinessValidationPort platoBusinessValidationPort;
+
     private ActualizarPlatoUseCase updateDishUseCase;
 
     private Long propietarioId;
@@ -44,7 +49,8 @@ class ActualizarPlatoUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        updateDishUseCase = new ActualizarPlatoUseCase(dishPersistencePort, userValidationPort, restaurantValidationPort);
+        platoBusinessValidationPort = new com.plazoleta.plazoleta.infraestructure.out.validation.PlatoBusinessValidationAdapter();
+        updateDishUseCase = new ActualizarPlatoUseCase(dishPersistencePort, userValidationPort, restaurantValidationPort, platoBusinessValidationPort);
 
         propietarioId = 1L;
         platoId = 10L;
@@ -135,7 +141,7 @@ class ActualizarPlatoUseCaseTest {
         when(userValidationPort.getUserById(propietarioId)).thenReturn(usuarioPropietario);
         when(dishPersistencePort.getById(platoId)).thenReturn(null);
 
-        DominioException ex = assertThrows(DominioException.class,
+        PlatoNoEncontradoException ex = assertThrows(PlatoNoEncontradoException.class,
                 () -> updateDishUseCase.updateDish(platoId, 18000, "desc", propietarioId));
 
         assertEquals("El plato no existe", ex.getMessage());
@@ -149,7 +155,7 @@ class ActualizarPlatoUseCaseTest {
         when(dishPersistencePort.getById(platoId)).thenReturn(platoExistente);
         when(restaurantValidationPort.restaurantePerteneceAPropietario(platoExistente.getRestauranteId(), propietarioId)).thenReturn(false);
 
-        DominioException ex = assertThrows(DominioException.class,
+        RestauranteNoPerteneceException ex = assertThrows(RestauranteNoPerteneceException.class,
                 () -> updateDishUseCase.updateDish(platoId, 18000, "desc", propietarioId));
 
         assertEquals("El restaurante no pertenece al propietario", ex.getMessage());
