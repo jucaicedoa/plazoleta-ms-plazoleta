@@ -23,7 +23,7 @@ public class UsuarioMicroserviceAdapter implements UsuarioValidationPort {
         try {
             log.info("Llamando al microservicio de usuarios para obtener usuario con ID: {}", userId);
             UsuarioResponseDto response = userFeignClient.getUserById(userId);
-            log.info("Usuario obtenido exitosamente: ID={}, Rol={}", response.getId(), response.getRol());
+            log.info("Usuario obtenido exitosamente: ID={}, Rol={}", response.getId(), response.getRole());
             return userClientMapper.toUserModel(response);
         } catch (FeignException.NotFound e) {
             log.warn("Usuario con ID {} no encontrado en el microservicio de usuarios (404)", userId);
