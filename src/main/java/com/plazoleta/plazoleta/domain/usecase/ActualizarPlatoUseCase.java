@@ -1,7 +1,6 @@
 package com.plazoleta.plazoleta.domain.usecase;
 
 import com.plazoleta.plazoleta.domain.api.PlatoUpdateServicePort;
-import com.plazoleta.plazoleta.domain.exception.DominioException;
 import com.plazoleta.plazoleta.domain.exception.PlatoNoEncontradoException;
 import com.plazoleta.plazoleta.domain.exception.RestauranteNoPerteneceException;
 import com.plazoleta.plazoleta.domain.exception.RolNoAutorizadoException;
@@ -9,19 +8,23 @@ import com.plazoleta.plazoleta.domain.model.Plato;
 import com.plazoleta.plazoleta.domain.spi.PlatoPersistencePort;
 import com.plazoleta.plazoleta.domain.spi.RestauranteValidationPort;
 import com.plazoleta.plazoleta.domain.spi.UsuarioValidationPort;
+import com.plazoleta.plazoleta.domain.spi.PlatoBusinessValidationPort;
 
 public class ActualizarPlatoUseCase implements PlatoUpdateServicePort {
 
     private final PlatoPersistencePort platoPersistencePort;
     private final UsuarioValidationPort usuarioValidationPort;
     private final RestauranteValidationPort restauranteValidationPort;
+    private final PlatoBusinessValidationPort platoBusinessValidationPort;
 
     public ActualizarPlatoUseCase(PlatoPersistencePort platoPersistencePort,
                              UsuarioValidationPort usuarioValidationPort,
-                             RestauranteValidationPort restauranteValidationPort) {
+                             RestauranteValidationPort restauranteValidationPort,
+                             PlatoBusinessValidationPort platoBusinessValidationPort) {
         this.platoPersistencePort = platoPersistencePort;
         this.usuarioValidationPort = usuarioValidationPort;
         this.restauranteValidationPort = restauranteValidationPort;
+        this.platoBusinessValidationPort = platoBusinessValidationPort;
     }
 
     @Override
@@ -41,12 +44,7 @@ public class ActualizarPlatoUseCase implements PlatoUpdateServicePort {
             throw new RestauranteNoPerteneceException("El restaurante no pertenece al propietario");
         }
 
-        if (precio == null || precio <= 0) {
-            throw new DominioException("El precio debe ser mayor a cero");
-        }
-        if (descripcion == null || descripcion.trim().isEmpty()) {
-            throw new DominioException("La descripción del plato es obligatoria");
-        }
+        platoBusinessValidationPort.validateUpdate(precio, descripcion);
         plato.setPrecio(precio);
         plato.setDescripcion(descripcion);
 

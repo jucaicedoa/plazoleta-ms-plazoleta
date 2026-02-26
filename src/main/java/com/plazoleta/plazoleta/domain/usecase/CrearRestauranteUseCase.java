@@ -1,43 +1,30 @@
 package com.plazoleta.plazoleta.domain.usecase;
 
 import com.plazoleta.plazoleta.domain.api.RestauranteServicePort;
-import com.plazoleta.plazoleta.domain.exception.DominioException;
 import com.plazoleta.plazoleta.domain.exception.RolNoAutorizadoException;
 import com.plazoleta.plazoleta.domain.model.Restaurante;
 import com.plazoleta.plazoleta.domain.model.UsuarioModelo;
 import com.plazoleta.plazoleta.domain.spi.RestaurantePersistencePort;
+import com.plazoleta.plazoleta.domain.spi.RestauranteBusinessValidationPort;
 import com.plazoleta.plazoleta.domain.spi.UsuarioValidationPort;
 
 public class CrearRestauranteUseCase implements RestauranteServicePort {
 
     private final RestaurantePersistencePort persistencePort;
     private final UsuarioValidationPort userValidationPort;
+    private final RestauranteBusinessValidationPort restauranteBusinessValidationPort;
 
     public CrearRestauranteUseCase(RestaurantePersistencePort persistencePort,
-                                   UsuarioValidationPort userValidationPort) {
+                                   UsuarioValidationPort userValidationPort,
+                                   RestauranteBusinessValidationPort restauranteBusinessValidationPort) {
         this.persistencePort = persistencePort;
         this.userValidationPort = userValidationPort;
+        this.restauranteBusinessValidationPort = restauranteBusinessValidationPort;
     }
 
     @Override
     public void crearRestaurante(Restaurante restaurant) {
-        if (restaurant.getNombre() == null || restaurant.getNombre().trim().isEmpty()) {
-            throw new DominioException("El nombre del restaurante es obligatorio");
-        }
-        if (restaurant.getNombre().matches("\\d+")) {
-            throw new DominioException("El nombre del restaurante no puede contener solo números");
-        }
-
-        if (restaurant.getNit() == null || !restaurant.getNit().matches("\\d+")) {
-            throw new DominioException("El NIT debe ser numérico");
-        }
-
-        if (restaurant.getTelefono() == null || !restaurant.getTelefono().matches("^\\+?\\d+$")) {
-            throw new DominioException("El teléfono debe ser numérico y puede incluir el símbolo + al inicio");
-        }
-        if (restaurant.getTelefono().length() > 13) {
-            throw new DominioException("El teléfono debe tener máximo 13 caracteres");
-        }
+        restauranteBusinessValidationPort.validateRestaurante(restaurant);
 
         UsuarioModelo user = userValidationPort.getUserById(restaurant.getPropietarioId());
 
